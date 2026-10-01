@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão de Associados · Antigos Alunos</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#1d2733;--mu:#6b7480;--bd:#e3e0d8;--ac:#1f4e79;--acx:#fff;--ok:#2e7d4f;--warn:#b7791f;--bad:#b3392f;--okb:#e3f3ea;--wb:#fbf0d9;--bb:#f8e1de;--ib:#ebedf0}
+@media(prefers-color-scheme:dark){:root{--bg:#14181d;--card:#1d232a;--tx:#e8eaed;--mu:#9aa3ad;--bd:#2d353e;--ac:#6aa6d8;--acx:#10161c;--ok:#6fcf97;--warn:#e5b755;--bad:#f08a80;--okb:#1d3528;--wb:#3a3019;--bb:#3d2220;--ib:#2a313a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px}
+h1{font:600 22px Georgia,serif;margin:0}h1 small{display:block;font:13px system-ui,sans-serif;color:var(--mu);font-weight:400}
+button,input,select,textarea{font:inherit;color:inherit}
+.btn{background:var(--ac);color:var(--acx);border:0;border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-block}
+.btn.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}.btn.del{background:transparent;color:var(--bad);border:1px solid var(--bd)}.btn.sm{padding:5px 10px;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat,.bd{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font-size:26px;font-weight:600}.stat span{color:var(--mu);font-size:13px}
+.bd{margin-bottom:16px}.bd h3{margin:0 0 8px;font:600 15px system-ui,sans-serif}
+.bi{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--bd)}.bi:first-of-type{border-top:0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.bar input,.bar select{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px 10px}.bar input{flex:1;min-width:160px}
+.tw{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--bd);white-space:nowrap}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer}tbody tr:hover{background:var(--bg)}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.t-ok{background:var(--okb);color:var(--ok)}.t-w{background:var(--wb);color:var(--warn)}.t-b{background:var(--bb);color:var(--bad)}.t-i{background:var(--ib);color:var(--mu)}
+.empty{padding:36px 16px;text-align:center;color:var(--mu)}
+.st{background:var(--okb);color:var(--ok);border-radius:10px;padding:10px 14px;margin-bottom:14px}.st.err{background:var(--bb);color:var(--bad)}
+#lg{max-width:460px;margin:12vh auto;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:28px;text-align:center}
+#lg h1{margin-bottom:6px}#lg p{color:var(--mu)}
+dialog{border:1px solid var(--bd);border-radius:14px;background:var(--card);color:var(--tx);padding:0;width:min(560px,94vw);max-height:92vh}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+form{padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}form h2{grid-column:1/-1;margin:0;font:600 18px Georgia,serif}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu)}
+label input,label select,label textarea{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;color:var(--tx)}
+.full{grid-column:1/-1}.yrs{display:flex;flex-wrap:wrap;gap:6px}
+.yrs label{flex-direction:row;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:4px 9px;color:var(--tx)}
+.acts{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.note{font-size:12px;color:var(--mu);margin-top:10px}
+@media(max-width:480px){form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<!-- ============ CONFIGURAÇÃO (ver README.md) ============ -->
+<script>
+const CONFIG={
+  CLIENT_ID:'COLE_AQUI_O_CLIENT_ID.apps.googleusercontent.com',
+  SHEET_ID:'',                                   // opcional: ID fixo da folha de associados
+  ASSOC:'Associação de Antigos Alunos',
+  CAL:'Aniversários dos associados',             // nome do calendário criado
+  GRUPO:'Associados',                            // etiqueta nos Contactos Google
+  ASSUNTO:'Parabéns, {nome}!',
+  CORPO:'Caro(a) {nome},\n\nA Associação de Antigos Alunos deseja-lhe um feliz aniversário, com muita saúde e alegria!\n\nUm abraço,\nA Direção'
+};
+</script>
+
+<div id="lg">
+  <h1>Antigos Alunos<small>Gestão de associados</small></h1>
+  <p>Entre com a conta Google da associação para gerir associados, contactos, calendário e emails.</p>
+  <button class="btn" id="login">Entrar com Google</button>
+  <p id="lgm" style="font-size:13px"></p>
+  <details id="cfg" style="text-align:left;margin-top:14px"><summary style="cursor:pointer;color:var(--mu)">⚙️ Configuração</summary>
+    <div style="display:grid;gap:10px;margin-top:10px">
+      <label>ID de cliente Google (OAuth)<input id="cid" placeholder="123456-abc.apps.googleusercontent.com" autocomplete="off"></label>
+      <label>Endereço da folha Google (opcional)<input id="sid" placeholder="https://docs.google.com/spreadsheets/d/…" autocomplete="off"></label>
+      <div class="note" style="margin:0">Origem a autorizar no Google Cloud (Credenciais › ID de cliente › Origens JavaScript autorizadas):<br><code id="org" style="user-select:all"></code><div id="orgw" style="color:var(--bad)"></div></div>
+      <button class="btn sec" id="savecfg" type="button">Guardar configuração</button>
+    </div>
+  </details>
+</div>
+
+<div class="wrap" id="app" hidden>
+<header>
+  <h1>Associação de Antigos Alunos<small id="who">Gestão de associados</small></h1>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn sec" id="sl" target="_blank" rel="noopener">Abrir folha</a>
+    <button class="btn sec" id="syn">Sincronizar pendentes</button>
+    <button class="btn sec" id="out">Sair</button>
+    <button class="btn" id="add">+ Novo associado</button>
+  </div>
+</header>
+<div class="st" id="st" hidden></div>
+<div class="stats" id="stats"></div>
+<div class="bd"><h3>🎂 Aniversários (próximos 30 dias)</h3><div id="bdl"></div></div>
+<div class="bar">
+  <input id="q" type="search" placeholder="Pesquisar por nome, email, curso, nº…">
+  <select id="fe"><option value="">Todos os estados</option><option>Ativo</option><option>Inativo</option><option>Suspenso</option></select>
+  <select id="fq"><option value="">Todas as quotas</option><option value="ok">Em dia</option><option value="late">Em atraso</option></select>
+</div>
+<div class="tw"><table><thead><tr><th>Nº</th><th>Nome</th><th>Curso</th><th>Conclusão</th><th>Estado</th><th>Quotas</th><th>Google</th></tr></thead><tbody id="rows"></tbody></table><div class="empty" id="empty" hidden></div></div>
+</div>
+
+<dialog id="dlg"><form id="f" method="dialog">
+<h2 id="ft">Associado</h2>
+<label>Nome completo<input name="nome" required></label>
+<label>Nº de sócio<input name="num"></label>
+<label>Email<input name="email" type="email"></label>
+<label>Telefone<input name="tel" type="tel"></label>
+<label>Data de nascimento<input name="nascimento" type="date"></label>
+<label>Curso<input name="curso"></label>
+<label>Ano de conclusão<input name="conclusao" type="number" min="1900" max="2100"></label>
+<label>Data de adesão<input name="adesao" type="date"></label>
+<label>Estado<select name="estado"><option>Ativo</option><option>Inativo</option><option>Suspenso</option></select></label>
+<div class="full"><label style="margin-bottom:6px">Quotas pagas (por ano)</label><div class="yrs" id="yrs"></div></div>
+<label class="full">Notas<textarea name="notas" rows="2"></textarea></label>
+<div class="acts"><button type="button" class="btn del" id="del">Eliminar</button><button type="button" class="btn sec" id="cancel">Cancelar</button><button type="submit" class="btn">Guardar</button></div>
+</form></dialog>
+
+<script>
+const SCOPES=['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/contacts','https://www.googleapis.com/auth/calendar','https://www.googleapis.com/auth/gmail.send','https://www.googleapis.com/auth/userinfo.email'].join(' ');
+const COLS=['num','nome','email','tel','nascimento','curso','conclusao','adesao','estado','quotas','notas','contactId','eventId'];
+const FIELDS=['nome','num','email','tel','nascimento','curso','conclusao','adesao','estado','notas'];
+const SH='https://sheets.googleapis.com/v4/spreadsheets/',PE='https://people.googleapis.com/v1/',CA='https://www.googleapis.com/calendar/v3/';
+const YEAR=new Date().getFullYear(),$=s=>document.querySelector(s),pad=n=>String(n).padStart(2,'0'),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+let token=null,sheetId=null,gid=null,calId=null,grpId=null,members=[],editId=null,busy=false;
+const msg=(t,err)=>{const e=$('#st');e.textContent=t||'';e.className='st'+(err?' err':'');e.hidden=!t};
+
+// ---------- Autenticação (Google Identity Services) ----------
+const getToken=prompt=>new Promise((res,rej)=>{
+  if(!window.google||!google.accounts)return rej(new Error('Biblioteca Google não carregada.'));
+  google.accounts.oauth2.initTokenClient({client_id:CONFIG.CLIENT_ID,scope:SCOPES,prompt:prompt||'',
+    callback:r=>r.error?rej(new Error(r.error)):(token=r.access_token,res(token)),
+    error_callback:e=>rej(new Error(e.type||'login_cancelado'))}).requestAccessToken();
+});
+async function api(url,opt={},retry=true){
+  const r=await fetch(url,{...opt,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',...(opt.headers||{})},
+    body:opt.body&&typeof opt.body!=='string'?JSON.stringify(opt.body):opt.body});
+  if(r.status===401&&retry){try{await getToken('')}catch(e){throw new Error('Sessão expirada. Clique em "Sair" e entre de novo.')}return api(url,opt,false)}
+  if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}throw new Error(r.status+' '+m)}
+  return r.status===204?null:r.json();
+}
+
+// ---------- Folha Google (base de dados) ----------
+async function ensureSheet(){
+  sheetId=CONFIG.SHEET_ID||ls.get('sheetId');
+  if(!sheetId){
+    if(confirm('Ainda não há uma folha de associados.\n\nOK = criar uma folha nova no seu Google Drive\nCancelar = usar uma folha existente (colar o endereço)')){
+      const r=await api(SH,{method:'POST',body:{properties:{title:'Associados – '+CONFIG.ASSOC},sheets:[{properties:{title:'Associados'}}]}});sheetId=r.spreadsheetId;
+    }else{const m=(prompt('Cole o endereço (URL) da folha Google:')||'').match(/\/d\/([\w-]+)/);if(!m)throw new Error('Endereço inválido.');sheetId=m[1]}
+    ls.set('sheetId',sheetId);
+  }
+  const meta=await api(SH+sheetId+'?fields=sheets.properties');
+  const s=meta.sheets.find(x=>x.properties.title==='Associados');
+  if(!s)throw new Error('A folha tem de ter um separador chamado "Associados".');
+  gid=s.properties.sheetId;$('#sl').href='https://docs.google.com/spreadsheets/d/'+sheetId;
+}
+const nd=v=>{v=String(v||'').trim();let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+'-'+pad(m[2])+'-'+pad(m[3]);m=v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);return m?m[3]+'-'+pad(m[2])+'-'+pad(m[1]):''};
+async function load(){
+  let v=(await api(`${SH}${sheetId}/values/Associados!A1:M5000`)).values||[];
+  if(!v.length){await api(`${SH}${sheetId}/values/Associados!A1:M1?valueInputOption=RAW`,{method:'PUT',body:{values:[COLS]}});v=[COLS]}
+  else if(v[0][0]!=='num')throw new Error('A 1.ª linha da folha deve ter os cabeçalhos: '+COLS.join(', '));
+  members=v.slice(1).map((r,i)=>{const m={_row:i+2};COLS.forEach((c,j)=>m[c]=r[j]||'');
+    m.nascimento=nd(m.nascimento);m.adesao=nd(m.adesao);m.quotas=String(m.quotas).split(/[\s,;]+/).filter(Boolean).map(Number);return m}).filter(m=>m.nome);
+  render();
+}
+const toRow=m=>COLS.map(c=>c==='quotas'?(m.quotas||[]).join(' '):(m[c]??''));
+const putIds=m=>api(`${SH}${sheetId}/values/Associados!L${m._row}:M${m._row}?valueInputOption=RAW`,{method:'PUT',body:{values:[[m.contactId||'',m.eventId||'']]}});
+
+// ---------- Contactos Google ----------
+async function ensureGroup(){
+  if(grpId)return;
+  const l=(await api(PE+'contactGroups?pageSize=200')).contactGroups||[];
+  const g=l.find(x=>x.groupType==='USER_CONTACT_GROUP'&&x.name===CONFIG.GRUPO);
+  grpId=g?g.resourceName:(await api(PE+'contactGroups',{method:'POST',body:{contactGroup:{name:CONFIG.GRUPO}}})).resourceName;
+}
+function person(o){
+  const p=(o.nome||'').trim().split(/\s+/);
+  const nota=['Nº de sócio: '+o.num,o.curso&&'Curso: '+o.curso,o.conclusao&&'Conclusão: '+o.conclusao,o.adesao&&'Adesão: '+o.adesao,'Estado: '+o.estado,(o.quotas||[]).length&&'Quotas pagas: '+[...o.quotas].sort().join(', '),o.notas].filter(Boolean).join('\n');
+  const r={names:[{givenName:p[0],familyName:p.slice(1).join(' ')}],organizations:[{name:CONFIG.ASSOC,title:o.curso?'Antigo aluno · '+o.curso:'Antigo aluno'}],biographies:[{value:nota,contentType:'TEXT_PLAIN'}]};
+  if(o.email)r.emailAddresses=[{value:o.email}];if(o.tel)r.phoneNumbers=[{value:o.tel}];
+  if(o.nascimento){const d=o.nascimento.split('-').map(Number);r.birthdays=[{date:{year:d[0],month:d[1],day:d[2]}}]}
+  return r;
+}
+
+// ---------- Calendário Google ----------
+async function ensureCal(){
+  if(calId)return;
+  const l=(await api(CA+'users/me/calendarList?minAccessRole=owner')).items||[];
+  const c=l.find(x=>x.summary===CONFIG.CAL);
+  calId=c?c.id:(await api(CA+'calendars',{method:'POST',body:{summary:CONFIG.CAL,timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}})).id;
+}
+function nextBd(m){
+  const d=(m.nascimento||'').split('-').map(Number);if(d.length<3||!d[1])return null;
+  const t=new Date();t.setHours(0,0,0,0);
+  const mk=y=>{let dt=new Date(y,d[1]-1,d[2]);if(d[1]===2&&d[2]===29&&dt.getMonth()!==1)dt=new Date(y,1,28);return dt};
+  let n=mk(t.getFullYear());if(n<t)n=mk(t.getFullYear()+1);
+  return{days:Math.round((n-t)/864e5),date:n,age:n.getFullYear()-d[0]};
+}
+function evBody(o){
+  const d=o.nascimento.split('-').map(Number),dia=(d[1]===2&&d[2]===29)?28:d[2];
+  const t=new Date();t.setHours(0,0,0,0);let s=new Date(t.getFullYear(),d[1]-1,dia);if(s<t)s=new Date(t.getFullYear()+1,d[1]-1,dia);
+  const e=new Date(s);e.setDate(e.getDate()+1);const ymd=x=>x.getFullYear()+'-'+pad(x.getMonth()+1)+'-'+pad(x.getDate());
+  return{summary:'🎂 Aniversário: '+o.nome,description:'Enviar parabéns a '+o.nome+(o.email?' ('+o.email+')':''),start:{date:ymd(s)},end:{date:ymd(e)},
+    recurrence:['RRULE:FREQ=YEARLY'],transparency:'transparent',
+    reminders:{useDefault:false,overrides:[{method:'popup',minutes:900},{method:'email',minutes:900},{method:'popup',minutes:0}]}};
+}
+
+// ---------- Sincronização de um associado ----------
+async function syncMember(o,orig){
+  const notes=[];let changed=false;
+  try{
+    await ensureGroup();const p=person(o);
+    if(o.contactId){
+      const cur=await api(`${PE}${o.contactId}?personFields=metadata`);
+      await api(`${PE}${o.contactId}:updateContact?updatePersonFields=names,emailAddresses,phoneNumbers,birthdays,organizations,biographies`,{method:'PATCH',body:{...p,etag:cur.etag}});
+    }else{
+      p.memberships=[{contactGroupMembership:{contactGroupResourceName:grpId}}];
+      o.contactId=(await api(PE+'people:createContact',{method:'POST',body:p})).resourceName;changed=true;
+    }
+    notes.push('Contacto ✓');
+  }catch(e){notes.push('Contacto ✗ ('+e.message+')')}
+  try{
+    const ativo=o.estado==='Ativo'&&!!o.nascimento;
+    const same=orig&&orig.nome===o.nome&&orig.nascimento===o.nascimento&&orig.estado===o.estado&&orig.email===o.email;
+    if(ativo||o.eventId)await ensureCal();
+    if(o.eventId&&(!ativo||!same)){try{await api(`${CA}calendars/${encodeURIComponent(calId)}/events/${o.eventId}`,{method:'DELETE'})}catch(e){}o.eventId='';changed=true}
+    if(ativo&&!o.eventId){o.eventId=(await api(`${CA}calendars/${encodeURIComponent(calId)}/events`,{method:'POST',body:evBody(o)})).id;changed=true}
+    notes.push(ativo?'Calendário ✓':'Calendário (não aplicável)');
+  }catch(e){notes.push('Calendário ✗ ('+e.message+')')}
+  return{notes,changed};
+}
+
+// ---------- Gravar / eliminar ----------
+async function saveMember(o,orig){
+  if(orig){
+    const r=((await api(`${SH}${sheetId}/values/Associados!A${orig._row}:B${orig._row}`)).values||[[]])[0];
+    if(String(r[1]||'')!==orig.nome||String(r[0]||'')!==orig.num){await load();throw new Error('A folha foi alterada por outra pessoa; lista recarregada. Tente de novo.')}
+    o._row=orig._row;o.contactId=orig.contactId;o.eventId=orig.eventId;
+    await api(`${SH}${sheetId}/values/Associados!A${o._row}:M${o._row}?valueInputOption=RAW`,{method:'PUT',body:{values:[toRow(o)]}});
+  }else{
+    const r=await api(`${SH}${sheetId}/values/Associados!A1:M1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,{method:'POST',body:{values:[toRow(o)]}});
+    o._row=+r.updates.updatedRange.match(/!\D*(\d+)/)[1];
+  }
+  const sy=await syncMember(o,orig);
+  if(sy.changed)await putIds(o);
+  await load();return sy.notes;
+}
+async function removeMember(m){
+  const out=[];
+  if(m.contactId){try{await api(`${PE}${m.contactId}:deleteContact`,{method:'DELETE'})}catch(e){out.push('contacto')}}
+  if(m.eventId){try{await ensureCal();await api(`${CA}calendars/${encodeURIComponent(calId)}/events/${m.eventId}`,{method:'DELETE'})}catch(e){out.push('evento')}}
+  await api(`${SH}${sheetId}:batchUpdate`,{method:'POST',body:{requests:[{deleteDimension:{range:{sheetId:gid,dimension:'ROWS',startIndex:m._row-1,endIndex:m._row}}}]}});
+  await load();return out;
+}
+async function syncAll(){
+  const todo=members.filter(m=>!m.contactId||(m.estado==='Ativo'&&m.nascimento&&!m.eventId));
+  if(!todo.length){msg('Tudo sincronizado: não há associados pendentes.');return}
+  let n=0,bad=0;
+  for(const m of todo){
+    msg(`A sincronizar ${++n} de ${todo.length}…`);
+    const sy=await syncMember(m,null);if(sy.notes.some(x=>x.includes('✗')))bad++;
+    if(sy.changed)await putIds(m);await sleep(500);
+  }
+  await load();msg(`Sincronização concluída: ${todo.length-bad} ok, ${bad} com erros.`,bad>0);
+}
+
+// ---------- Email (Gmail) ----------
+async function sendMail(m){
+  const f=s=>s.replace(/\{nome\}/g,(m.nome||'').split(' ')[0]);
+  const u8=s=>{let x='';new TextEncoder().encode(s).forEach(c=>x+=String.fromCharCode(c));return btoa(x)};
+  const raw=['To: '+m.email,'Subject: =?UTF-8?B?'+u8(f(CONFIG.ASSUNTO))+'?=','MIME-Version: 1.0','Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',u8(f(CONFIG.CORPO))].join('\r\n');
+  await api('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{method:'POST',body:{raw:btoa(raw).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}});
+}
+
+// ---------- Interface ----------
+const emDia=m=>(m.quotas||[]).includes(YEAR);
+const estTag=e=>`<span class="tag ${e==='Ativo'?'t-ok':e==='Suspenso'?'t-w':'t-i'}">${esc(e)}</span>`;
+const quotaTag=m=>m.estado!=='Ativo'?'<span class="tag t-i">—</span>':emDia(m)?'<span class="tag t-ok">Em dia</span>':'<span class="tag t-b">Em atraso</span>';
+function filtered(){
+  const q=$('#q').value.toLowerCase().trim(),fe=$('#fe').value,fq=$('#fq').value;
+  return members.filter(m=>{
+    if(fe&&m.estado!==fe)return false;
+    if(fq==='ok'&&!(m.estado==='Ativo'&&emDia(m)))return false;
+    if(fq==='late'&&!(m.estado==='Ativo'&&!emDia(m)))return false;
+    return !q||[m.nome,m.email,m.curso,m.num,m.conclusao,m.tel].join(' ').toLowerCase().includes(q);
+  }).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+}
+function render(){
+  const at=members.filter(m=>m.estado==='Ativo'),ok=at.filter(emDia).length;
+  $('#stats').innerHTML=[['Total de associados',members.length],['Ativos',at.length],['Quotas '+YEAR+' em dia',ok],['Em atraso',at.length-ok]].map(([l,v])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  const b=at.map(m=>({m,b:nextBd(m)})).filter(x=>x.b&&x.b.days<=30).sort((a,c)=>a.b.days-c.b.days);
+  $('#bdl').innerHTML=b.length?b.map(({m,b})=>`<div class="bi"><span>${b.days===0?'<b>Hoje 🎉</b>':b.date.toLocaleDateString('pt-PT',{day:'numeric',month:'long'})} · <b>${esc(m.nome)}</b> <span style="color:var(--mu)">(${b.age} anos)</span></span>${m.email?`<button class="btn sm" data-mail="${m._row}">Enviar parabéns</button>`:'<span class="tag t-i">sem email</span>'}</div>`).join(''):'<div style="color:var(--mu)">Sem aniversários nos próximos 30 dias.</div>';
+  const l=filtered();
+  $('#rows').innerHTML=l.map(m=>`<tr data-id="${m._row}"><td>${esc(m.num)}</td><td><b>${esc(m.nome)}</b><br><span style="color:var(--mu);font-size:13px">${esc(m.email)}</span></td><td>${esc(m.curso)}</td><td>${esc(m.conclusao)}</td><td>${estTag(m.estado)}</td><td>${quotaTag(m)}</td><td>${m.contactId?'👤':'·'} ${m.eventId?'📅':'·'}</td></tr>`).join('');
+  const e=$('#empty');e.hidden=l.length>0;e.textContent=members.length?'Nenhum associado corresponde à pesquisa.':'Ainda não há associados. Clique em “+ Novo associado”.';
+}
+function openForm(row){
+  editId=row||null;const m=members.find(x=>x._row===row)||{estado:'Ativo',adesao:new Date().toISOString().slice(0,10),quotas:[]},f=$('#f');
+  $('#ft').textContent=row?'Editar associado':'Novo associado';
+  FIELDS.forEach(k=>f.elements[k].value=m[k]??'');
+  if(!row)f.elements.num.value=String(Math.max(0,...members.map(x=>parseInt(x.num)||0))+1);
+  const from=Math.min(parseInt((m.adesao||'').slice(0,4))||YEAR,...(m.quotas||[]),YEAR);let h='';
+  for(let y=YEAR;y>=Math.max(from,YEAR-15);y--)h+=`<label><input type="checkbox" value="${y}" ${(m.quotas||[]).includes(y)?'checked':''}> ${y}</label>`;
+  $('#yrs').innerHTML=h;$('#del').hidden=!row;$('#dlg').showModal();
+}
+async function run(label,fn){
+  if(busy)return;busy=true;msg(label);
+  try{await fn()}catch(e){msg('Erro: '+e.message,true)}finally{busy=false}
+}
+$('#f').addEventListener('submit',ev=>{
+  ev.preventDefault();const f=ev.target,o={};
+  FIELDS.forEach(k=>o[k]=f.elements[k].value.trim());
+  o.quotas=[...document.querySelectorAll('#yrs input:checked')].map(i=>+i.value);
+  const orig=editId?members.find(x=>x._row===editId):null;$('#dlg').close();
+  run('A guardar e a sincronizar com o Google…',async()=>{const n=await saveMember(o,orig);msg('✓ '+o.nome+' guardado · '+n.join(' · '),n.some(x=>x.includes('✗')))});
+});
+$('#del').onclick=()=>{
+  const m=members.find(x=>x._row===editId);$('#dlg').close();
+  if(m&&confirm('Eliminar '+m.nome+' da folha, dos Contactos e do Calendário?'))run('A eliminar…',async()=>{const f=await removeMember(m);msg('✓ '+m.nome+' eliminado'+(f.length?' (não foi possível remover: '+f.join(', ')+')':''),f.length>0)});
+};
+$('#cancel').onclick=()=>$('#dlg').close();
+$('#add').onclick=()=>openForm();
+$('#syn').onclick=()=>run('A sincronizar…',syncAll);
+$('#rows').addEventListener('click',e=>{const r=e.target.closest('tr');if(r)openForm(+r.dataset.id)});
+$('#bdl').addEventListener('click',e=>{
+  const b=e.target.closest('[data-mail]');if(!b)return;const m=members.find(x=>x._row===+b.dataset.mail);
+  if(m&&confirm('Enviar email de parabéns a '+m.nome+' <'+m.email+'>?'))run('A enviar…',async()=>{await sendMail(m);msg('✓ Parabéns enviados a '+m.nome)});
+});
+['q','fe','fq'].forEach(i=>$('#'+i).addEventListener('input',render));
+$('#out').onclick=()=>{try{google.accounts.oauth2.revoke(token)}catch(e){}token=null;$('#app').hidden=true;$('#lg').hidden=false};
+$('#login').onclick=async()=>{
+  const lm=$('#lgm');lm.textContent='';
+  if(CONFIG.CLIENT_ID.startsWith('COLE_AQUI')){lm.textContent='Abra “Configuração” e cole o ID de cliente Google.';$('#cfg').open=true;return}
+  try{
+    await getToken('');
+    const u=await api('https://www.googleapis.com/oauth2/v3/userinfo');$('#who').textContent='Sessão iniciada como '+u.email;
+    await ensureSheet();$('#lg').hidden=true;$('#app').hidden=false;await load();msg('');
+  }catch(e){lm.textContent='Não foi possível entrar: '+e.message}
+};
+(function(){
+  const c=ls.get('clientId'),su=ls.get('sheetUrl');
+  if(c)CONFIG.CLIENT_ID=c;
+  if(su){const m=su.match(/\/d\/([\w-]+)/);if(m)CONFIG.SHEET_ID=m[1]}
+  const novo=CONFIG.CLIENT_ID.startsWith('COLE_AQUI');
+  $('#cid').value=novo?'':CONFIG.CLIENT_ID;$('#sid').value=su||'';
+  $('#org').textContent=location.origin;
+  if(location.origin==='null')$('#orgw').textContent='Abra a aplicação através de um endereço http(s), não diretamente do ficheiro.';
+  if(novo)$('#cfg').open=true;
+})();
+$('#savecfg').onclick=()=>{
+  const lm=$('#lgm'),c=$('#cid').value.trim(),su=$('#sid').value.trim();
+  if(!/^[\w.-]+\.apps\.googleusercontent\.com$/.test(c)){lm.textContent='O ID de cliente deve terminar em .apps.googleusercontent.com';return}
+  if(su&&!/\/d\/[\w-]+/.test(su)){lm.textContent='O endereço da folha não parece válido.';return}
+  ls.set('clientId',c);ls.set('sheetUrl',su);CONFIG.CLIENT_ID=c;
+  const m=su.match(/\/d\/([\w-]+)/);CONFIG.SHEET_ID=m?m[1]:'';if(m)ls.set('sheetId',m[1]);
+  lm.textContent='Configuração guardada. Já pode entrar com Google.';$('#cfg').open=false;
+};
+</script>
+</body>
+</html>
